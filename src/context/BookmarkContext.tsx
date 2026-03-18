@@ -17,7 +17,7 @@ type Action =
   | { type: 'SET_ROOT'; payload: { root: BookmarkNode; fileName: string } }
   | { type: 'SET_SEARCH'; payload: string }
   | { type: 'SET_SORT'; payload: SortMode }
-  | { type: 'TOGGLE_FOLDER'; payload: string }
+  | { type: 'TOGGLE_FOLDER'; payload: { id: string; paneId: string } }
   | { type: 'EXPAND_ALL' }
   | { type: 'COLLAPSE_ALL' }
   | { type: 'SET_EDITING'; payload: BookmarkNode | null }
@@ -143,13 +143,18 @@ function reducer(state: BookmarkState, action: Action): BookmarkState {
   switch (action.type) {
     case 'SET_ROOT': {
       const allIds = getAllFolderIds(action.payload.root);
+      const initialExpanded = new Set<string>();
+      allIds.slice(0, 5).forEach(id => {
+        initialExpanded.add(`left-${id}`);
+        initialExpanded.add(`right-${id}`);
+      });
       // Expand first two levels
       return {
         ...state,
         root: action.payload.root,
         fileName: action.payload.fileName,
         isDirty: false,
-        expandedFolders: new Set(allIds.slice(0, 5)),
+        expandedFolders: initialExpanded,
         searchQuery: '',
         sortMode: 'none',
         selectedIds: new Set(),
@@ -161,16 +166,23 @@ function reducer(state: BookmarkState, action: Action): BookmarkState {
       return { ...state, sortMode: action.payload };
     case 'TOGGLE_FOLDER': {
       const newSet = new Set(state.expandedFolders);
-      if (newSet.has(action.payload)) {
-        newSet.delete(action.payload);
+      const key = `${action.payload.paneId}-${action.payload.id}`;
+      if (newSet.has(key)) {
+        newSet.delete(key);
       } else {
-        newSet.add(action.payload);
+        newSet.add(key);
       }
       return { ...state, expandedFolders: newSet };
     }
     case 'EXPAND_ALL': {
       if (!state.root) return state;
-      return { ...state, expandedFolders: new Set(getAllFolderIds(state.root)) };
+      const allIds = getAllFolderIds(state.root);
+      const newExpanded = new Set<string>();
+      allIds.forEach(id => {
+        newExpanded.add(`left-${id}`);
+        newExpanded.add(`right-${id}`);
+      });
+      return { ...state, expandedFolders: newExpanded };
     }
     case 'COLLAPSE_ALL':
       return { ...state, expandedFolders: new Set() };

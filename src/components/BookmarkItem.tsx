@@ -35,7 +35,7 @@ export default function BookmarkItem({ node, depth, filteredIds, paneId }: Bookm
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
-  const isExpanded = state.expandedFolders.has(node.id);
+  const isExpanded = state.expandedFolders.has(`${paneId}-${node.id}`);
   const isFolder = node.type === 'folder';
 
   const {
@@ -153,7 +153,7 @@ export default function BookmarkItem({ node, depth, filteredIds, paneId }: Bookm
         {/* Expand/collapse for folders */}
         {isFolder ? (
           <button
-            onClick={() => dispatch({ type: 'TOGGLE_FOLDER', payload: node.id })}
+            onClick={() => dispatch({ type: 'TOGGLE_FOLDER', payload: { id: node.id, paneId } })}
             className="shrink-0 text-slate-500 hover:text-white transition-colors p-0.5"
           >
             {isExpanded ? (
